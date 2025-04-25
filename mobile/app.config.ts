@@ -45,6 +45,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           "Allow $(PRODUCT_NAME) to access your microphone.",
       },
     ],
+    [
+      "expo-asset",
+      {
+        assets: [
+          "./assets/audio/introduction.wav",
+          "./assets/audio/part2_prepare.wav",
+          "./assets/audio/part2_speak.wav",
+        ],
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

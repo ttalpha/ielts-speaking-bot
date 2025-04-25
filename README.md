@@ -117,7 +117,6 @@ An AI-powered assistant that can give feedback on IELTS Speaking performance.
 
 ### GET `/:user_id/:session_id/feedback`
 - **Description**: Return the feedback based on the speaking session's performance.
-- **Request Body**: None.
 - **Response**:
   ```json
   {
@@ -133,3 +132,8 @@ An AI-powered assistant that can give feedback on IELTS Speaking performance.
     "suggested_improvements": ["string"]
   }
   ```
+
+## Todo
+- [ ] Add screen to test microphone and speaker
+- [ ] Add speaking session screen
+- [ ] Integrate with API

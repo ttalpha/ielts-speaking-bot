@@ -5,31 +5,33 @@ import { useState } from "react";
 export const useMicrophone = () => {
   const toast = useToast();
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
-  const [permissionResponse, requestPermission] = Audio.usePermissions();
+  const [, requestPermission, getPermissionsAsync] = Audio.usePermissions();
 
   async function askRecordingPermission() {
-    if (permissionResponse?.status !== "granted") {
-      const response = await requestPermission();
-      if (response?.status !== "granted") {
-        toast.toast("Permission denied", "destructive");
-        return;
-      } else {
-        toast.toast("Permission granted", "success");
-      }
+    const { status } = await getPermissionsAsync();
+    if (status === Audio.PermissionStatus.GRANTED) {
+      return status;
     }
-    await Audio.setAudioModeAsync({
-      allowsRecordingIOS: true,
-      playsInSilentModeIOS: true,
-    });
+    const response = await requestPermission();
+    if (response.granted) {
+      toast.toast("Microphone permission granted :)", "success");
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+    } else {
+      toast.toast("Microphone permission denied :(", "destructive");
+    }
+    return response.status;
   }
 
   async function startRecording() {
     try {
       console.log("Starting recording..");
-      const { recording } = await Audio.Recording.createAsync(
+      const { recording: newRecording } = await Audio.Recording.createAsync(
         Audio.RecordingOptionsPresets.HIGH_QUALITY
       );
-      setRecording(recording);
+      setRecording(newRecording);
       console.log("Recording started");
     } catch (err) {
       console.error("Failed to start recording", err);
@@ -47,9 +49,9 @@ export const useMicrophone = () => {
   }
 
   return {
+    recording,
     askRecordingPermission,
     startRecording,
     stopRecording,
-    permissionResponse,
   };
 };

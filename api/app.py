@@ -1,5 +1,5 @@
 from openai import OpenAI
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from datetime import datetime
 import utils
 import uuid
@@ -107,6 +107,13 @@ def end_session(user_id, session_id):
   feedback = utils.generate_feedback(client, user_id, session_id)
   return jsonify({'feedback': feedback}), 200
 
+@app.route('/u/<user_id>/s/<session_id>/audio/<audio_id>', methods=['GET'])
+def get_audio(user_id, session_id, audio_id):
+  audio_path = f"data/{user_id}/{session_id}/{audio_id}.wav"
+  try:
+    return send_file(audio_path, as_attachment=True)
+  except FileNotFoundError:
+    return jsonify({"error": "Audio file not found"}), 404
 
 @app.route('/u/<user_id>/sessions', methods=['GET'])
 def get_user_history(user_id):

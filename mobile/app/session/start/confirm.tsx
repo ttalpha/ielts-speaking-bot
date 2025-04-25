@@ -1,5 +1,5 @@
-import { Stack } from "expo-router";
-import { ScrollView, View } from "react-native";
+import { Link, Stack, router } from "expo-router";
+import { View } from "react-native";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useEffect, useState } from "react";
@@ -18,9 +18,10 @@ export default function StartSpeakingSessionScreen() {
   const [neverShowAgain, setNeverShowAgain] = useState(false);
   const { askRecordingPermission } = useMicrophone();
 
-  useEffect(() => {
+  const onContinue = () => {
     askRecordingPermission();
-  }, []);
+    router.replace("/session/speak");
+  };
 
   return (
     <>
@@ -46,13 +47,23 @@ export default function StartSpeakingSessionScreen() {
                   1.
                 </Text>
                 <Text className="text-secondary-foreground">
+                  The test lasts approximately 11-14 minutes, so please ensure
+                  you have enough time to complete the session without
+                  interruptions.
+                </Text>
+              </View>
+              <View className="flex flex-row items-start">
+                <Text className="text-secondary-foreground font-bold mr-2">
+                  2.
+                </Text>
+                <Text className="text-secondary-foreground">
                   Please ensure you are in a quiet and comfortable environment
                   to avoid noise and distractions.
                 </Text>
               </View>
               <View className="flex flex-row items-start">
                 <Text className="text-secondary-foreground font-bold mr-2">
-                  2.
+                  3.
                 </Text>
                 <Text className="text-secondary-foreground">
                   Be aware that once the session begins, retakes are not
@@ -61,7 +72,7 @@ export default function StartSpeakingSessionScreen() {
               </View>
               <View className="flex flex-row items-start">
                 <Text className="text-secondary-foreground font-bold mr-2">
-                  3.
+                  4.
                 </Text>
                 <Text className="text-secondary-foreground">
                   Once you close the app, the session will be terminated, and
@@ -70,7 +81,16 @@ export default function StartSpeakingSessionScreen() {
               </View>
               <View className="flex flex-row items-start">
                 <Text className="text-secondary-foreground font-bold mr-2">
-                  4.
+                  5.
+                </Text>
+                <Text className="text-secondary-foreground">
+                  Turn on the sound and ensure your device is not in silent mode
+                  to hear the questions.
+                </Text>
+              </View>
+              <View className="flex flex-row items-start">
+                <Text className="text-secondary-foreground font-bold mr-2">
+                  6.
                 </Text>
                 <Text className="text-secondary-foreground">
                   Allow the app access to your device's microphone to start the
@@ -85,11 +105,11 @@ export default function StartSpeakingSessionScreen() {
                 onCheckedChange={setNeverShowAgain}
                 checked={neverShowAgain}
               />
-              <Label className="ml-2" nativeID="agreed">
+              <Label className="ml-2" nativeID="neverShowAgain">
                 Don't show this again
               </Label>
             </View>
-            <Button>
+            <Button onPress={onContinue}>
               <Text className="text-primary-foreground font-medium">
                 Continue
               </Text>
