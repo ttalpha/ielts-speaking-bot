@@ -1,9 +1,4 @@
-import { Link, Stack, router } from "expo-router";
-import { View } from "react-native";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useEffect, useState } from "react";
-import { useMicrophone } from "@/hooks";
+import { Button, Text } from "@/components/ui";
 import {
   Card,
   CardContent,
@@ -12,16 +7,60 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button, Text } from "@/components/ui";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { useLocalStorage, useMicrophone } from "@/hooks";
+import { Stack, router } from "expo-router";
+import { useState } from "react";
+import { View } from "react-native";
 
 export default function StartSpeakingSessionScreen() {
   const [neverShowAgain, setNeverShowAgain] = useState(false);
+  const { getItem } = useLocalStorage();
   const { askRecordingPermission } = useMicrophone();
 
-  const onContinue = () => {
-    askRecordingPermission();
-    router.replace("/session/speak");
+  const createSpeakingSession = async () => {
+    const userId = await getItem("userId");
+    if (!userId) return;
+    try {
+      const response = await fetch(
+        `http://10.0.2.2:5000/u/${userId}/session/new`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      const session = await response.json();
+      return session.id;
+    } catch (error) {
+      console.error("Error creating speaking session:", error);
+    }
   };
+
+  const redirectToSpeakingSession = async () => {
+    const sessionId = await createSpeakingSession();
+    console.log("Session id:", sessionId);
+    if (sessionId) {
+      router.navigate(`/session/speak/${sessionId}`);
+    } else {
+      console.error("Failed to create speaking session.");
+    }
+  };
+
+  const onContinue = async () => {
+    askRecordingPermission();
+    await redirectToSpeakingSession();
+  };
+
+  const requirements = [
+    "Ensure you have at least 15 minutes to complete the session without any interruption.",
+    "Turn on the sound and ensure your device is not in silent mode to hear the questions.",
+    "Allow the app to access your device's microphone to start the session.",
+    "Ensure you are in an environment free of noise and distraction.",
+    "Speak clearly and loudly enough so we can generate accurate feedback.",
+    "If you quit at the middle of the session, it won't be saved and you have to start a new one.",
+    "Have a piece of paper and a pen/pencil next to you so you can take notes when you're told to do so.",
+  ];
 
   return (
     <>
@@ -39,64 +78,19 @@ export default function StartSpeakingSessionScreen() {
             <Text className="text-secondary-foreground mb-2">
               Before starting the IELTS speaking session, please ensure you meet
               the following conditions. This will help you have the best
-              experience and simulate the real test environment:
+              experience like in the real test environment:
             </Text>
             <View className="space-y-4">
-              <View className="flex flex-row items-start">
-                <Text className="text-secondary-foreground font-bold mr-2">
-                  1.
-                </Text>
-                <Text className="text-secondary-foreground">
-                  The test lasts approximately 11-14 minutes, so please ensure
-                  you have enough time to complete the session without
-                  interruptions.
-                </Text>
-              </View>
-              <View className="flex flex-row items-start">
-                <Text className="text-secondary-foreground font-bold mr-2">
-                  2.
-                </Text>
-                <Text className="text-secondary-foreground">
-                  Please ensure you are in a quiet and comfortable environment
-                  to avoid noise and distractions.
-                </Text>
-              </View>
-              <View className="flex flex-row items-start">
-                <Text className="text-secondary-foreground font-bold mr-2">
-                  3.
-                </Text>
-                <Text className="text-secondary-foreground">
-                  Be aware that once the session begins, retakes are not
-                  allowed, so take your time to prepare.
-                </Text>
-              </View>
-              <View className="flex flex-row items-start">
-                <Text className="text-secondary-foreground font-bold mr-2">
-                  4.
-                </Text>
-                <Text className="text-secondary-foreground">
-                  Once you close the app, the session will be terminated, and
-                  you will need to start a new session.
-                </Text>
-              </View>
-              <View className="flex flex-row items-start">
-                <Text className="text-secondary-foreground font-bold mr-2">
-                  5.
-                </Text>
-                <Text className="text-secondary-foreground">
-                  Turn on the sound and ensure your device is not in silent mode
-                  to hear the questions.
-                </Text>
-              </View>
-              <View className="flex flex-row items-start">
-                <Text className="text-secondary-foreground font-bold mr-2">
-                  6.
-                </Text>
-                <Text className="text-secondary-foreground">
-                  Allow the app access to your device's microphone to start the
-                  session.
-                </Text>
-              </View>
+              {requirements.map((requirement, index) => (
+                <View key={index} className="flex flex-row items-start">
+                  <Text className="text-secondary-foreground font-semibold mr-2">
+                    {index + 1}.
+                  </Text>
+                  <Text className="text-secondary-foreground">
+                    {requirement}
+                  </Text>
+                </View>
+              ))}
             </View>
           </CardContent>
           <CardFooter className="flex-col items-start gap-y-3">

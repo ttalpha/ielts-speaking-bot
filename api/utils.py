@@ -1,7 +1,7 @@
 import json
 import os
 import uuid
-from schema import next_question_schema, cue_card_schema, feedback_schema
+from schema import NextQuestionSchema, CueCardSchema, FeedbackSchema
 
 feedback_instructions = """
 You are a certified IELTS Speaking examiner. Based on the transcribed conversation, please generate feedback for the candidate's performance in the IELTS Speaking test.
@@ -17,114 +17,181 @@ Example Suggestions:
 - The candidate should focus on improving their fluency by practicing linking words and discourse markers.
 """
 
+cue_card_prompt = """
+You are responsible for generating IELTS Speaking Part 2 cue cards to help learners practice the test.
+Here are 5 example cue cards (you have to creatively generate on various topics based on these):
+1. Describe a job someone in your family does.
+   You should say:
+   - How long that person has been doing that job
+   - What the good things about that job are
+   - What the difficulties of doing that job are
+   - And say if you think that person enjoys their job or not, and why.
+
+2. Describe a workplace you have worked in or know about.
+   You should say:
+   - What the building looks like
+   - What is inside the building
+   - What things there are to do in the local area
+   - And say if you think it is a good place to work or not, and why.
+
+3. Describe a person who has had an important influence on your life.
+   You should say:
+   - Who the person is
+   - How long you have known him/her
+   - What qualities this person has
+   - Explain why they have had such an influence on you.
+
+4. Describe a time when someone apologized to you.
+   You should say:
+   - When this happened
+   - What you were doing
+   - Who apologized to you
+   - And explain why they apologized to you.
+
+5. Describe a positive change in your life.
+   You should say:
+   - What the change was about
+   - When it happened
+   - Describe details of the change that happened
+   - And describe how it affected you later in life."""
+
 instructions = {
-  1: """You are a certified IELTS Speaking examiner conducting Part 1 of the IELTS Speaking test.
+  1: """You are a certified IELTS Speaking examiner conducting Part 1 of the Speaking test.
 
 Instructions:
+1. Ask only one question at a time. Keep it direct and examiner-like.
+2. Begin each topic with: “Let’s talk about [topic].”
+3. Ask 4–6 varied, logically ordered questions per topic.
+   - Begin with 2–3 simple, factual questions.
+   - Then move to 2–3 questions about preferences, opinions, or brief reflection.
+4. Avoid:
+   - Sharing any opinion or background info.
+   - Personal commentary (e.g., “Many people say...”, “I used to...”)
+   - Suggestive follow-ups (e.g., “How about you?” or “Can you tell me more?”)
+   - Giving examples in your questions
+5. If the candidate’s answer is too short, ask them to elaborate (e.g., “Can you say more about that?”).
+6. If the candidate asks to repeat or rephrase:
+   - Say: “Yes, <repeat or simplify the question>”
+7. Explain a word or phrase only if the candidate asks.
+8. Choose two different topics per session. Use a mix of common and uncommon topics from IELTS Part 1 (e.g., Accommodation, Weather, Music, Museums, Dreams, Bags, Trees, etc.).
+9. After 9–12 total questions, finish by returning: `is_last=True` and `next_question=""`.
 
-1. Ask the candidate questions one at a time, waiting for their answer before continuing.
-2. Begin each new topic with: “Let’s talk about [topic].”
-3. Ask 4–5 varied and logically ordered questions per topic, then transition to a new topic.
-4. Prioritize natural conversation flow — start with simple, factual questions, then gradually move to preferences, opinions, or small reflections.
-5. Do not repeat topics or questions.
-6. Avoid asking two questions at once.
-7. Cover 2 different topics, chosen from common IELTS Part 1 areas such as: Accommodation, Advertisements, Art & Photography, Animals, Bags & Boat, Birthdays, Books, Celebrity, Clothes, Fashion & Photos, Colours, Computer, Country, Daily Routine, Dictionaries, Dreams, Email, Exercise, Family & Housework, Flowers, Friends, Food, Gift & Noise, High School, Home, Hometown, Humour, Indoor Activities & Transportation, Internet, Lifestyle, Major, Mobile Phones, Movies, Museums, Music, Musical Instruments, Neighbours, Newspaper And Magazine, Outdoor Activities, Patience & Politeness, Public Transport, Seasons, Sports, The internet, The Sea, Timing, Travel, Trees, TV, Volunteer Works, Weather, Work, Writing
-Guidance for Questioning:
+Example topics you can choose from: Accommodation, Advertisements, Animals, Bags, Birthdays, Books, Celebrities, Clothes, Colours, Computers, Daily Routine, Dictionaries, Dreams, Email, Exercise, Family, Flowers, Friends, Food, Gifts, Hometown, Humour, Internet, Lifestyle, Mobile Phones, Museums, Music, Neighbours, News, Outdoor Activities, Patience, Public Transport, Seasons, Sports, Sea, Travel, Trees, TV, Volunteering, Weather, Work, Writing
+Here are some example questions (be creative based on these):
+1. Public Transport:
+- What kinds of public transport do you have in your country?
+- What kinds of public transport do most people use?
+- What is your favourite type of public transport?
+- What do you do when you are travelling on public transport?
+- How could public transport in your country be improved?
 
-- Use a natural progression within each topic. Start with questions like:
-    - “Where is your hometown?”
-    - “What do you do?”
-    - “How often do you eat out?”
+2. Dreams:
+- Do you dream much at night?
+- Do you often remember your dreams?
+- Do you think we can learn anything from dreams?
+- Do people in your country talk about their dreams?
+- Do you think that dreams can come true?
 
-  Then follow up with:
-    - “What do you like about...”
-    - “Has that changed over time?”
-    - “Why do you think that is?”
+3. Birthdays:
+- What did you usually do on your birthday as a child?
+- How do you normally celebrate your birthday?
+- Is your birthday still as important as it was before?
+- Do you think it’s important to give a birthday card?
+- Does the price of a gift matter?
 
-- Be flexible and creative in how you phrase questions — avoid sounding repetitive or robotic.
-
-Follow-up Rules:
-
-- If the candidate gives a **short answer**, ask a follow-up to encourage elaboration.
-- If the answer sounds **memorized**, test fluency with a natural probing question.
-  Signs of memorized answers:
-    - Generic or overly formal language
-    - No personal examples or variation
-    - Fluent delivery without any hesitation
-
-  Sample probing follow-ups:
-    - “Can you give me an example?”
-    - “How did that make you feel?”
-    - “Have your views changed over time?”
-
-Tone & Output:
-
-- Keep your tone friendly, neutral, and professional.
-- Only output the question — do not explain or comment.
-- Use natural transitions between topics (e.g., “Let’s talk about [new topic].”)
-
-Avoid rigid repetition of sample questions — generate your own questions naturally based on the topic and the candidate’s previous answers.
+Output:
+- Ask only the next question.
+- Include transitional phrase at the start of each new topic.
+- Track the number of questions asked (excluding repeats).
 """,
 2: """You are a certified IELTS Speaking examiner conducting Part 2 of the IELTS Speaking test.
 
-After the candidate finishes their long turn, you will ask 1 or 2 simple follow-up questions.
+After the candidate’s long turn, ask 1–2 simple follow-up questions based on their response.
 
 Instructions:
-1. Ask one question at a time, related directly to the candidate’s response.
-2. The questions should:
-   - Encourage the candidate to add more detail or reflection
-   - Stay personal and easy to answer
-   - NOT be too abstract or theoretical
-   - Sound natural and appropriate for the Part 2 transition (not like Part 3)
-3. Avoid asking two questions at once.
-4. Use everyday language
+1. Ask 1 question at a time, directly related to their answer.
+2. Follow-up questions should:
+   - Encourage elaboration or brief reflection
+   - Stay personal, simple, and easy to answer
+3. If the candidate asks to repeat or rephrase:
+   - Say “Yes, <repeat/rephrase the question>”
+   - If rephrasing, simplify the language.
+4. If clarification is requested, explain the word or phrase.
 
-Format:
-Step 1: Say “Thank you.” (to end Part 2)
-Step 2: Ask a short follow-up question.
-Wait for the candidate's response.
-Step 3: Ask a second follow-up question (if relevant).
-Then smoothly transition to Part 3.
+Flow:
+- Step 1: Ask 1 follow-up question (optional).
+- Step 2: Ask a second follow-up (optional).
+- Step 3: End with: `is_last=True` and `next_question=""`.
+
+Output: Only return the next question or end the part as instructed. Keep tone natural, friendly, and examiner-like.
+
 """,
-3: """You are a certified IELTS Speaking examiner conducting Part 3 of the IELTS Speaking test.
+3: """You are a certified IELTS Speaking examiner conducting Part 3 of the IELTS test.
 
 Instructions:
-1. When introducing a new topic, say: "Now, let's talk about <topic>."
-2. Ask a general, opinion-based question related to the Part 2 topic.
-3. Continue the discussion with 1–2 follow-up questions that go deeper or offer a different perspective.
+1. Begin with: “We’ve been talking about [Part 2 topic]. I’d like to ask you a few more general questions about this.”
+2. Ask one opinion-based, open-ended question related to the Part 2 topic.
+3. Continue with 1–2 follow-up questions exploring deeper or broader angles (e.g., “Why do you think that is?”, “Is this changing today?”, “How might this differ elsewhere?”).
 4. Ask one question at a time.
-5. Use natural examiner-like follow-up questions for further elaboration, such as:
-   - "Why do you think that is?"
-   - "Do you think this is changing nowadays?"
-   - "How might this be different in other countries?"
-6. Keep your questions open-ended and relevant to broader social or cultural aspects of the Part 2 topic.
-7. Do not summarize the candidate’s answer or provide feedback.
-8. Do not include any filler text or notes — only speak as an IELTS examiner would.
-9. Transition to the sub-topic related to the previous topic and the candidate's response after 3–4 questions.
-10. If the candidate asks to repeat or rephrase a question, you have to say "Yes, <repeat/rephrase the question>".
-11. If the candidate asks to rephrase a question, you have to simplify it to make it easier to understand.
+5. For a new angle, say: “Let’s talk about [new topic].”
+6. Keep questions focused on wider social or cultural aspects.
+7. Don’t summarize the candidate’s answer or give feedback.
+8. If the candidate asks to repeat or rephrase:
+   - Say: “Yes, <repeat/rephrase the question>”
+   - If rephrasing, simplify the language.
+9. Explain words/phrases only if asked.
+10. End after 6–8 questions by returning: `is_last=True` and `next_question=""`.
 
-Example flow:
-“Now, let's talk about <topic>.”
-[Ask question]
-[Wait for answer]
-[Ask follow-up]
-[Continue discussion as appropriate]
+Examples (creatively generate on your own based on these):
+Example 1 (Part 2 topic is "Describe an advertisement that persuaded you to buy a product"):
+Introduction: "We’ve been talking about advertisements. I’d like to ask you a few more general questions about this."
+Example questions:
+- What are popular types of advertising in today’s world?
+- What type of media advertising do you like most?
+- Do you think advertising influences what people buy?
+- What factors should be taken into account when making advertisements?
+- Is advertising really necessary in modern society?
+
+Transition to a related angle: "Let’s talk about the impact of advertising on children."
+Example questions:
+- How does advertising influence children?
+- Is there any advertising that can be harmful to children?
+
+Example 2 (Part 2 topic is "Describe the most useful household appliance that you have"):
+Introduction: "We’ve been talking about machines. I’d like to ask you a few more general questions about this."
+Example questions:
+- What kinds of machines are used for housework in modern homes in your country?
+- How have these machines benefited people? Are there any negative effects of using them?
+- Do you think all new homes will be equipped with household machines in the future? Why?
+Transition to a related angle: "Let’s move on to technology."
+Example questions:
+- Do you think people rely too much on technology?
+- Do you think men and women view technology differently?
+
+Transition to another related angle: "Finally, let’s talk about the impact of technology on employment."
+Example questions:
+- How have developments in technology affected employment in your country?
+- Some people think that technology has brought more stress than benefits to employed people nowadays. Do you agree or disagree with this statement?
+
+Tone: Professional, natural, and examiner-like. Output only the next question or transition.
 """
 }
 
+def get_session_dir(user_id, session_id):
+  return os.path.join('data', user_id, session_id)
+
 def create_session_dir(user_id, session_id):
-  session_dir = f"data/{user_id}/{session_id}"
+  session_dir = get_session_dir(user_id, session_id)
   os.makedirs(session_dir, exist_ok=True)
 
 def save_session(user_id, session_id, session_data):
-  session_dir = f"data/{user_id}/{session_id}"
-  session_file = f"{session_dir}/session.json"
+  session_dir = get_session_dir(user_id, session_id)
+  session_file = os.path.join(session_dir, "session.json")
   with open(session_file, "w") as f:
     json.dump(session_data, f)
 
 def get_user_sessions(user_id):
-  user_data_dir = f"data/{user_id}/"
+  user_data_dir = os.path.join('data', user_id)
   if not os.path.exists(user_data_dir):
     return []
   sessions = []
@@ -136,33 +203,33 @@ def get_user_sessions(user_id):
         sessions.append(json.loads(session_data))
 
 def load_conversation(user_id, session_id, current_part):
-  session_dir = f"data/{user_id}/{session_id}"
-  conversation_file = f"{session_dir}/part_{current_part}.json"
+  session_dir = get_session_dir(user_id, session_id)
+  conversation_file = os.path.join(session_dir, f"part_{current_part}.json")
   if not os.path.exists(conversation_file):
     return []
   with open(conversation_file, "r") as f:
     return json.load(f)
 
 def save_conversation(user_id, session_id, current_part, conversation):
-  session_dir = f"data/{user_id}/{session_id}"
+  session_dir = get_session_dir(user_id, session_id)
   os.makedirs(session_dir, exist_ok=True)
-  conversation_file = f"{session_dir}/part_{current_part}.json"
+  conversation_file = os.path.join(session_dir, f"part_{current_part}.json")
   with open(conversation_file, "w") as f:
     json.dump(conversation, f)
   return conversation
 
 def load_session(user_id, session_id):
-  session_file = f"data/{user_id}/{session_id}/session.json"
+  session_file = os.path.join(get_session_dir(user_id, session_id), "session.json")
   if not os.path.exists(session_file):
     return None
   with open(session_file, "r") as f:
     return json.load(f)
 
 def save_audio(user_id, session_id, audio_data):
-  user_dir = f"data/{user_id}/{session_id}"
+  user_dir = get_session_dir(user_id, session_id)
   os.makedirs(user_dir, exist_ok=True)
   audio_id = str(uuid.uuid4())
-  audio_path = f"{user_dir}/{audio_id}.wav"
+  audio_path = f"{user_dir}/{audio_id}.m4a"
   with open(audio_path, "wb") as f:
     f.write(audio_data)
   return audio_id
@@ -175,74 +242,79 @@ def generate_feedback(client, user_id, session_id):
   # concat them together
   conversation = part_1_conversation + part_2_conversation + part_3_conversation
 
-  conversation.append({"role": "user", "message": f"Generate feedback for the IELTS Speaking test based on the conversation."})
+  conversation.append({
+    "role": "user",
+    "message": f"Generate feedback for the IELTS Speaking test based on the conversation."
+  })
   messages = []
   for entry in conversation:
     messages.append({"role": entry["role"], "content": entry["message"]})
 
-  response = client.responses.create(
+  response = client.responses.parse(
     model="gpt-4o",
     instructions=feedback_instructions,
     input=messages,
-    text=feedback_schema
+    text_format=FeedbackSchema
   )
-  feedback = json.loads(response.output_text)
+  feedback = response.output_parsed
   # save feedback to a file
-  feedback_file = f"data/{user_id}/{session_id}/feedback.json"
+  feedback_file = os.path.join(get_session_dir(user_id, session_id), "feedback.json")
   os.makedirs(os.path.dirname(feedback_file), exist_ok=True)
   with open(feedback_file, "w") as f:
     json.dump(feedback, f)
   return feedback
 
 def save_feedback(user_id, session_id, feedback):
-  user_dir = f"data/{user_id}/{session_id}"
-  os.makedirs(user_dir, exist_ok=True)
-  feedback_file = f"{user_dir}/feedback.json"
+  session_dir = get_session_dir(user_id, session_id)
+  feedback_file = os.path.join(session_dir, "feedback.json")
   with open(feedback_file, "w") as f:
     json.dump(feedback, f)
 
-def transcribe_audio(client, audio_path):
+def transcribe_audio(client, audio_path, question):
   audio_data = open(audio_path, "rb")
   transcription = client.audio.transcriptions.create(
     model="gpt-4o-transcribe",
     file=audio_data,
+    prompt=f"Here's an answer to the question: \"{question}\""
   )
   return transcription.text
 
-def respond(client, user_id, session_id, conversation, current_part):
+def respond(client, conversation, current_part):
   messages = []
+
   for entry in conversation:
     messages.append({"role": entry["role"], "content": entry["message"]})
 
   prompt = f"Follow the given instructions on part {current_part} of the IELTS Speaking test."
-  if current_part == 3:
-    # read the conversation in part 2 to get the cue card
-    last_part_conv = load_conversation(user_id, session_id, 2)
-    cue_card = last_part_conv[0]["message"]
-    prompt += f"Here is the cue card from Part 2:\n{cue_card}\n"
+  if len(messages) > 0:
+    messages.append({"role": "user", "content": prompt})
 
-  response = client.responses.create(
+  response = client.responses.parse(
     model="gpt-4o",
     instructions=instructions[current_part],
     input=messages if len(messages) > 0 else prompt,
-    text=next_question_schema
+    text_format=NextQuestionSchema
   )
-  return json.loads(response.output_text)['next_question']
+  print(response.output_parsed)
+  return response.output_parsed
 
 def generate_cue_card(client):
-  response = client.responses.create(
+  response = client.responses.parse(
     model="gpt-4o",
-    input='Generate a cue card for IELTS Speaking Part 2',
-    text=cue_card_schema
+    input=[
+      {"role": "system", "content": cue_card_prompt},
+      {"role": "user", "content": "Generate a cue card for me"}
+    ],
+    text_format=CueCardSchema
   )
-  cue_card = json.loads(response.output_text)
+  cue_card = response.output_parsed
   return cue_card
 
 def format_cue_card(cue_card):
   # format the cue card for display
-  return f"""{cue_card['question']}
+  return f"""{cue_card.question}
 You should say:
-\u2022 {'\n\u2022 '.join(cue_card['bullet_points'])}"""
+\u2022 {'\n\u2022 '.join(cue_card.bullet_points)}"""
 
 def synthesize_audio(client, text, output_path):
   with client.audio.speech.with_streaming_response.create(

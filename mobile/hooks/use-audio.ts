@@ -25,7 +25,7 @@ export const useAudio = () => {
   }
 
   async function playSound() {
-    console.log("Playing sound", sound);
+    console.log("Playing sound");
     await sound?.playAsync();
   }
 

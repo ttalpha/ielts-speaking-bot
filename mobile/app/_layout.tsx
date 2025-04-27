@@ -128,15 +128,11 @@ export default function RootLayout() {
               <Stack>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen
-                  options={{
-                    headerShadowVisible: false,
-                  }}
+                  options={{ headerShown: false }}
                   name="habits/archive"
                 />
                 <Stack.Screen
-                  options={{
-                    headerShadowVisible: false,
-                  }}
+                  options={{ headerShown: false }}
                   name="habits/[id]"
                 />
               </Stack>

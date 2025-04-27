@@ -5,13 +5,15 @@ An AI-powered assistant that can give feedback on IELTS Speaking performance.
 ## User Journey
 ### Part 1
 
-1. Questions for each part will be generated in advance.
-2. AI bot will ask the questions sequentially.
-3. The user will have 20 seconds to answer.
-4. The user can ask to repeat the question one more time if they haven't answered.
-5. AI bot will automatically move to the next question if either condition satisfies:
-- The user is silent for 3 seconds
-- The user has answered for 20 seconds
+1. AI bot will ask a question.
+2. The user will have up to 45 seconds to answer the question.
+3. The user can ask to repeat/rephrase the question or explain a word/phrase up to 2 times.
+4. AI bot will move on to the next question if either condition satisfies:
+- The user is silent for 2 seconds
+- The user has answered up to 45 seconds, AI bot will interrupt their speech with "Thank you for your answer." and ask the next question
+5. If the user is completely silent for the first 5 seconds, AI bot will say "Sorry, would you like me to repeat the question?"
+- If the user says "Yes", repeat the question
+- If the user remains silent, move to the next question
 
 ### Part 2
 1. Display the card containing the topic to speak
@@ -20,15 +22,11 @@ An AI-powered assistant that can give feedback on IELTS Speaking performance.
 4. The user will speak for 2 minutes
 5. AI bot will end this part if either condition satisfies:
 - The user has spoken for 2 minutes.
-- The user has spoken for at least 1 minute but stayed silent for 10 seconds.
+- The user has spoken for at least 1 minute but stayed silent for 5 seconds.
+6. 1-2 follow-up questions may be asked
 
 ### Part 3
-1. Follow the first 2 steps in part 1
-2. The user will have up to 1 minute to answer
-3. Follow step 4 in part 1
-4. AI bot will automatically move to the next question if either condition satisfies:
-- The user is silent for 3 seconds
-- The user has answered for 1 minute
+Part 3 is the same in terms of the format in Part 1, but the user will have up to 1 minute to answer a question
 
 ### Feedback
 1. Overall band score
@@ -134,6 +132,12 @@ An AI-powered assistant that can give feedback on IELTS Speaking performance.
   ```
 
 ## Todo
-- [ ] Add screen to test microphone and speaker
-- [ ] Add speaking session screen
-- [ ] Integrate with API
+- [x] Add speaking session screen
+- [x] Integrate with API
+- [ ] Generate feedback on a speaking session
+- [ ] Interrupt the answer if it is too long
+- [ ] Automatically move to the next question after a silence threshold
+- [ ] Handle complete silence
+- [ ] Prevent spam/abuse by temporarily/permanently banning accounts e.g. over-repeating a question, say completely irrelevant things or speak harmful content
+- [ ] Stream response in real-time to minimize latency
+- [ ] Switch to open-source models

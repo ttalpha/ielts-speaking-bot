@@ -1,13 +1,35 @@
-import { Audio } from "expo-av";
+import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from "expo-av";
 import { useToast } from "@/components/ui/toast";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+
+const recordingOptions: Audio.RecordingOptions = {
+  android: {
+    extension: ".m4a",
+    outputFormat: Audio.AndroidOutputFormat.MPEG_4,
+    audioEncoder: Audio.AndroidAudioEncoder.AAC,
+    sampleRate: 44100,
+    numberOfChannels: 1,
+    bitRate: 128000,
+  },
+  ios: {
+    extension: ".m4a",
+    audioQuality: Audio.IOSAudioQuality.HIGH,
+    sampleRate: 44100,
+    numberOfChannels: 1,
+    bitRate: 128000,
+    linearPCMBitDepth: 16,
+    linearPCMIsBigEndian: false,
+    linearPCMIsFloat: false,
+  },
+  web: {},
+};
 
 export const useMicrophone = () => {
   const toast = useToast();
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [, requestPermission, getPermissionsAsync] = Audio.usePermissions();
 
-  async function askRecordingPermission() {
+  const askRecordingPermission = useCallback(async () => {
     const { status } = await getPermissionsAsync();
     if (status === Audio.PermissionStatus.GRANTED) {
       return status;
@@ -15,38 +37,50 @@ export const useMicrophone = () => {
     const response = await requestPermission();
     if (response.granted) {
       toast.toast("Microphone permission granted :)", "success");
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      });
     } else {
       toast.toast("Microphone permission denied :(", "destructive");
     }
     return response.status;
-  }
+  }, []);
 
-  async function startRecording() {
+  const startRecording = useCallback(async () => {
     try {
       console.log("Starting recording..");
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+        interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+        interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+      });
       const { recording: newRecording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
+        recordingOptions
       );
       setRecording(newRecording);
       console.log("Recording started");
+      return newRecording;
     } catch (err) {
       console.error("Failed to start recording", err);
     }
-  }
+  }, []);
 
-  async function stopRecording() {
-    setRecording(null);
-    await recording?.stopAndUnloadAsync();
-    await Audio.setAudioModeAsync({
-      allowsRecordingIOS: false,
-    });
-    const uri = recording?.getURI();
-    return uri;
-  }
+  const stopRecording = useCallback(
+    async (currentRecording: Audio.Recording | null) => {
+      if (!currentRecording) {
+        console.error("No active recording played!");
+        return null;
+      }
+      await currentRecording.stopAndUnloadAsync();
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+      });
+      setRecording(null);
+      const uri = currentRecording.getURI();
+      return uri;
+    },
+    []
+  );
 
   return {
     recording,
