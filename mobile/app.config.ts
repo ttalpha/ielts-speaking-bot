@@ -55,6 +55,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         ],
       },
     ],
+    [
+      "expo-font",
+      {
+        fonts: [
+          "./assets/fonts/Geist-Bold.ttf",
+          "./assets/fonts/Geist-Medium.ttf",
+          "./assets/fonts/Geist-Regular.ttf",
+          "./assets/fonts/Geist-SemiBold.ttf",
+        ],
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

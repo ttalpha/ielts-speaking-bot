@@ -12,11 +12,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useToast } from "@/components/ui/toast";
 
 const PREPARATION_TIME = 60;
 const PART2_SPEAKING_TIME = 120;
 
 export default function SpeakingSession() {
+  const { toast } = useToast();
   const { id: sessionId } = useLocalSearchParams();
   const { getItem } = useLocalStorage();
   const { recording, startRecording, stopRecording, askRecordingPermission } =
@@ -107,7 +109,7 @@ export default function SpeakingSession() {
     // @ts-ignore
     formData.append("audio", {
       uri,
-      name: "recording.m4a",
+      name: "recording.mp3",
       type: "audio/m4a",
     });
     try {
@@ -122,6 +124,7 @@ export default function SpeakingSession() {
         }
       );
       const data: AnswerQuestionResponse = await response.json();
+      console.log({ data });
       return data;
     } catch (error) {
       console.error("Error sending recording:", error);
@@ -153,7 +156,7 @@ export default function SpeakingSession() {
     []
   );
 
-  const endSession = async () => {
+  const endSession = useCallback(async () => {
     try {
       await loadSound(
         require("../../../assets/audio/end.mp3"),
@@ -161,14 +164,15 @@ export default function SpeakingSession() {
         async (playbackStatus) => {
           if ((playbackStatus as AVPlaybackStatusSuccess)?.didJustFinish) {
             await unloadSound();
-            router.navigate("/");
+            toast("Session ended. Generating feedback...", "info");
+            router.navigate(`/session/feedback/${sessionId}`);
           }
         }
       );
     } catch (err) {
       console.error("Error playing sound:", err);
     }
-  };
+  }, [sessionId]);
 
   const fetchCueCard = async () => {
     const userId = await getItem("userId");
