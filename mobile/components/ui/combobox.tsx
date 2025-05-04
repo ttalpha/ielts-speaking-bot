@@ -1,8 +1,9 @@
 import * as React from "react";
-import {type ListRenderItemInfo, Text, View} from "react-native";
-import {useSafeAreaInsets} from "react-native-safe-area-context";
-import {cn} from "../../lib/utils";
-import {Check, ChevronsUpDown, Search} from "../Icons";
+import { type ListRenderItemInfo, View } from "react-native";
+import { Text } from "./text";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { cn } from "@/lib/utils";
+import { Check, ChevronsUpDown, Search } from "../Icons";
 import {
   BottomSheet,
   BottomSheetContent,
@@ -12,7 +13,7 @@ import {
   BottomSheetTextInput,
   useBottomSheet,
 } from "./bottom-sheet";
-import {Button, buttonTextVariants, buttonVariants} from "./button";
+import { Button, buttonTextVariants, buttonVariants } from "./button";
 
 // TODO: refactor and move to UI
 // TODO: create web component, use https://ui.shadcn.com/docs/components/combobox
@@ -51,7 +52,7 @@ const Combobox = React.forwardRef<
       onSelectedItemChange,
       ...props
     },
-    ref,
+    ref
   ) => {
     const insets = useSafeAreaInsets();
     const [search, setSearch] = React.useState("");
@@ -64,10 +65,10 @@ const Combobox = React.forwardRef<
     const listItems = React.useMemo(() => {
       return search
         ? items.filter((item) => {
-          return item.label
-            ?.toLocaleLowerCase()
-            .includes(search.toLocaleLowerCase());
-        })
+            return item.label
+              ?.toLocaleLowerCase()
+              .includes(search.toLocaleLowerCase());
+          })
         : items;
     }, [items, search]);
 
@@ -81,7 +82,7 @@ const Combobox = React.forwardRef<
     }
 
     const renderItem = React.useCallback(
-      ({item}: ListRenderItemInfo<unknown>) => {
+      ({ item }: ListRenderItemInfo<unknown>) => {
         const listItem = item as ComboboxOption;
         const isSelected = onSelectedItemChange
           ? selectedItemProp?.value === listItem.value
@@ -90,7 +91,7 @@ const Combobox = React.forwardRef<
           <Button
             variant="ghost"
             className="items-center flex-row flex-1 justify-between px-3 py-4"
-            style={{minHeight: 70}}
+            style={{ minHeight: 70 }}
             onPress={() => {
               if (onSelectedItemChange) {
                 onSelectedItemChange(onItemChange(listItem));
@@ -110,7 +111,7 @@ const Combobox = React.forwardRef<
           </Button>
         );
       },
-      [selectedItem, selectedItemProp],
+      [selectedItem, selectedItemProp]
     );
 
     function onSubmitEditing() {
@@ -208,7 +209,7 @@ const Combobox = React.forwardRef<
               return (
                 <View
                   className="items-center flex-row justify-center flex-1  px-3 py-5"
-                  style={{minHeight: 70}}
+                  style={{ minHeight: 70 }}
                 >
                   <Text className={"text-muted-foreground text-xl text-center"}>
                     {emptyText}
@@ -220,9 +221,9 @@ const Combobox = React.forwardRef<
         </BottomSheetContent>
       </BottomSheet>
     );
-  },
+  }
 );
 
 Combobox.displayName = "Combobox";
 
-export {Combobox, type ComboboxOption};
+export { Combobox, type ComboboxOption };

@@ -9,51 +9,18 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { useLocalStorage, useMicrophone } from "@/hooks";
-import { Stack, router } from "expo-router";
-import { useState } from "react";
+import { useCreateSession, useLocalStorage } from "@/hooks";
+import { Stack } from "expo-router";
+import { useCallback, useState } from "react";
 import { View } from "react-native";
 
 export default function StartSpeakingSessionScreen() {
   const [neverShowAgain, setNeverShowAgain] = useState(false);
-  const { getItem } = useLocalStorage();
-  const { askRecordingPermission } = useMicrophone();
-
-  const createSpeakingSession = async () => {
-    const userId = await getItem("userId");
-    if (!userId) return;
-    try {
-      const response = await fetch(
-        `http://10.0.2.2:5000/u/${userId}/session/new`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-      const session = await response.json();
-      return session.id;
-    } catch (error) {
-      console.error("Error creating speaking session:", error);
-    }
-  };
-
-  const redirectToSpeakingSession = async () => {
-    const sessionId = await createSpeakingSession();
-    console.log("Session id:", sessionId);
-    if (sessionId) {
-      router.navigate(`/session/speak/${sessionId}`);
-    } else {
-      console.error("Failed to create speaking session.");
-    }
-  };
-
-  const onContinue = async () => {
-    askRecordingPermission();
-    await redirectToSpeakingSession();
-  };
-
+  const { setItem } = useLocalStorage();
+  const { onContinue } = useCreateSession();
   const requirements = [
-    "Ensure you have at least 15 minutes to complete the session without any interruption.",
+    "At least 15 minutes to complete the session without any interruption.",
+    "Have stable Internet connection throughout the session.",
     "Turn on the sound and ensure your device is not in silent mode to hear the questions.",
     "Allow the app to access your device's microphone to start the session.",
     "Ensure you are in an environment free of noise and distraction.",
@@ -61,6 +28,11 @@ export default function StartSpeakingSessionScreen() {
     "If you quit at the middle of the session, it won't be saved and you have to start a new one.",
     "Have a piece of paper and a pen/pencil next to you so you can take notes when you're told to do so.",
   ];
+
+  const startSession = useCallback(async () => {
+    await setItem("neverShowAgain", String(neverShowAgain));
+    await onContinue();
+  }, [setItem, onContinue, neverShowAgain]);
 
   return (
     <>
@@ -103,7 +75,7 @@ export default function StartSpeakingSessionScreen() {
                 Don't show this again
               </Label>
             </View>
-            <Button onPress={onContinue}>
+            <Button onPress={startSession}>
               <Text className="text-primary-foreground font-medium">
                 Continue
               </Text>

@@ -14,10 +14,10 @@ import { Moon, Palette, Smartphone, Check, Sun } from "@/components/Icons";
 import ListItem from "@/components/ui/list-item";
 import { useCallback, useMemo, useState } from "react";
 import { useBottomSheetModal } from "@gorhom/bottom-sheet";
-import { getItem, setItem } from "@/lib/storage";
 
 import { useColorScheme } from "@/lib/useColorScheme";
 import { useTheme } from "next-themes";
+import { useLocalStorage } from "@/hooks";
 type ItemData = {
   title: string;
   subtitle: string;
@@ -47,12 +47,11 @@ function ThemeItem({ item, onPress, selected }: ItemProps) {
 }
 
 export const ThemeSettingItem = () => {
-  const [selectedTheme, setSelectedTheme] = useState(
-    getItem<"light" | "dark" | "system">("theme")
-  );
+  const [selectedTheme, setSelectedTheme] = useState("light");
   const { setColorScheme } = useColorScheme();
   const { dismiss } = useBottomSheetModal();
   const { theme, setTheme } = useTheme();
+  const { setItem } = useLocalStorage();
 
   const themes: ItemData[] = useMemo(
     () => [
@@ -79,12 +78,12 @@ export const ThemeSettingItem = () => {
   );
 
   const onSelect = useCallback(
-    (value: "light" | "dark" | "system") => {
+    async (value: "light" | "dark" | "system") => {
       if (Platform.OS === "web") {
         setTheme(value);
       } else {
         setColorScheme(value);
-        setItem("theme", value);
+        await setItem("theme", value);
         setSelectedTheme(value);
       }
       dismiss();

@@ -1,7 +1,7 @@
 import { useAudio, useLocalStorage, useMicrophone, useTimer } from "@/hooks";
 import { Audio, AVPlaybackStatusSuccess } from "expo-av";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
 import { Button, Text } from "@/components/ui";
 import { AnswerQuestionResponse, CueCard } from "@/types";
@@ -12,11 +12,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useToast } from "@/components/ui/toast";
 
 const PREPARATION_TIME = 60;
 const PART2_SPEAKING_TIME = 120;
 
 export default function SpeakingSession() {
+  const { toast } = useToast();
   const { id: sessionId } = useLocalSearchParams();
   const { getItem } = useLocalStorage();
   const { recording, startRecording, stopRecording, askRecordingPermission } =
@@ -107,7 +109,7 @@ export default function SpeakingSession() {
     // @ts-ignore
     formData.append("audio", {
       uri,
-      name: "recording.m4a",
+      name: "recording.mp3",
       type: "audio/m4a",
     });
     try {
@@ -122,6 +124,7 @@ export default function SpeakingSession() {
         }
       );
       const data: AnswerQuestionResponse = await response.json();
+      console.log({ data });
       return data;
     } catch (error) {
       console.error("Error sending recording:", error);
@@ -153,7 +156,7 @@ export default function SpeakingSession() {
     []
   );
 
-  const endSession = async () => {
+  const endSession = useCallback(async () => {
     try {
       await loadSound(
         require("../../../assets/audio/end.mp3"),
@@ -161,14 +164,15 @@ export default function SpeakingSession() {
         async (playbackStatus) => {
           if ((playbackStatus as AVPlaybackStatusSuccess)?.didJustFinish) {
             await unloadSound();
-            router.navigate("/");
+            toast("Session ended. Generating feedback...", "info");
+            router.navigate(`/session/feedback/${sessionId}`);
           }
         }
       );
     } catch (err) {
       console.error("Error playing sound:", err);
     }
-  };
+  }, [sessionId]);
 
   const fetchCueCard = async () => {
     const userId = await getItem("userId");
@@ -227,9 +231,9 @@ export default function SpeakingSession() {
 
   return (
     <>
-      <Stack.Screen />
+      <Stack.Screen options={{ headerShown: false }} />
       <View className="flex-1 items-center justify-center p-4">
-        <Text className="font-bold mb-4">Part {currentPart}</Text>
+        <Text className="mb-4 font-bold">Part {currentPart}</Text>
         {cueCard && (
           <Card className="w-full mb-6">
             <CardHeader>
@@ -268,7 +272,7 @@ export default function SpeakingSession() {
             className="mt-6"
             onPress={() => nextQuestion(recording, currentPart)}
           >
-            <Text>Next</Text>
+            <Text className="font-medium">Next</Text>
           </Button>
         )}
       </View>

@@ -6,7 +6,8 @@ import {
   useRef,
   useState,
 } from "react";
-import { Animated, Text, View } from "react-native";
+import { Animated, View } from "react-native";
+import { Text } from "./text";
 import { cn } from "@/lib/utils";
 import { AlertCircle, AlertTriangle, CheckCircle, Info } from "../Icons";
 

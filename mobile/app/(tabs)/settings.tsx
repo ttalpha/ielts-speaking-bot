@@ -31,7 +31,7 @@ export default function Settings() {
         </ListHeader>
         <ListItem
           itemLeft={(props) => <Star {...props} />} // props adds size and color attributes
-          label="Give us a start"
+          label="Give us a star"
           onPress={() =>
             openExternalURL("https://github.com/expo-starter/expo-template")
           }

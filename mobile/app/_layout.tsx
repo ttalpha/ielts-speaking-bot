@@ -2,7 +2,7 @@ import "./global.css";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { type Theme, ThemeProvider } from "@react-navigation/native";
 import { SplashScreen, Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
+import { useFonts } from "expo-font";
 import * as React from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PortalHost } from "@/components/primitives/portal";
@@ -14,7 +14,7 @@ import { ToastProvider } from "../components/ui/toast";
 import { useLocalStorage } from "../hooks";
 import { generateId } from "../lib/utils";
 
-const NAV_FONT_FAMILY = "Inter";
+const NAV_FONT_FAMILY = "Geist";
 const LIGHT_THEME: Theme = {
   dark: false,
   colors: NAV_THEME.light,
@@ -24,16 +24,16 @@ const LIGHT_THEME: Theme = {
       fontWeight: "400",
     },
     medium: {
-      fontFamily: NAV_FONT_FAMILY,
+      fontFamily: NAV_FONT_FAMILY + "-Medium",
       fontWeight: "500",
     },
     bold: {
-      fontFamily: NAV_FONT_FAMILY,
-      fontWeight: "700",
+      fontFamily: NAV_FONT_FAMILY + "-SemiBold",
+      fontWeight: "600",
     },
     heavy: {
-      fontFamily: NAV_FONT_FAMILY,
-      fontWeight: "800",
+      fontFamily: NAV_FONT_FAMILY + "-Bold",
+      fontWeight: "700",
     },
   },
 };
@@ -46,16 +46,16 @@ const DARK_THEME: Theme = {
       fontWeight: "400",
     },
     medium: {
-      fontFamily: NAV_FONT_FAMILY,
+      fontFamily: NAV_FONT_FAMILY + "-Medium",
       fontWeight: "500",
     },
     bold: {
-      fontFamily: NAV_FONT_FAMILY,
-      fontWeight: "700",
+      fontFamily: NAV_FONT_FAMILY + "-SemiBold",
+      fontWeight: "600",
     },
     heavy: {
-      fontFamily: NAV_FONT_FAMILY,
-      fontWeight: "800",
+      fontFamily: NAV_FONT_FAMILY + "-Bold",
+      fontWeight: "700",
     },
   },
 };
@@ -73,6 +73,12 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const [fontsLoaded, error] = useFonts({
+    Geist: require("../assets/fonts/Geist-Regular.ttf"),
+    "Geist-Bold": require("../assets/fonts/Geist-Bold.ttf"),
+    "Geist-Medium": require("../assets/fonts/Geist-Medium.ttf"),
+    "Geist-SemiBold": require("../assets/fonts/Geist-SemiBold.ttf"),
+  });
   const { colorScheme, setColorScheme, isDarkColorScheme } = useColorScheme();
   const [isColorSchemeLoaded, setIsColorSchemeLoaded] = React.useState(false);
   const { getItem, setItem } = useLocalStorage();
@@ -86,7 +92,7 @@ export default function RootLayout() {
         console.log("set userId", generateId());
       }
     })();
-  }, []);
+  }, [getItem, setItem]);
 
   React.useEffect(() => {
     (async () => {
@@ -111,11 +117,11 @@ export default function RootLayout() {
       }
       setIsColorSchemeLoaded(true);
     })().finally(() => {
-      SplashScreen.hideAsync();
+      if (fontsLoaded && !error) SplashScreen.hideAsync();
     });
-  }, []);
+  }, [fontsLoaded, error]);
 
-  if (!isColorSchemeLoaded) {
+  if (!isColorSchemeLoaded || !fontsLoaded) {
     return null;
   }
 
@@ -127,14 +133,6 @@ export default function RootLayout() {
             <BottomSheetModalProvider>
               <Stack>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen
-                  options={{ headerShown: false }}
-                  name="habits/archive"
-                />
-                <Stack.Screen
-                  options={{ headerShown: false }}
-                  name="habits/[id]"
-                />
               </Stack>
             </BottomSheetModalProvider>
           </GestureHandlerRootView>
