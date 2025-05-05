@@ -1,4 +1,5 @@
 import { Text } from "@/components/ui";
+import { useLocalSearchParams } from "expo-router";
 import React, { useMemo } from "react";
 import { View } from "react-native";
 import Svg, { Circle, G, Text as SvgText } from "react-native-svg";
@@ -27,6 +28,8 @@ export function OverallChart({ overall }: OverallChartProps) {
     }
   }, [overall]);
 
+  const { id: sessionId } = useLocalSearchParams();
+
   const radius = 80;
   const strokeWidth = 10;
   const center = radius + strokeWidth;
@@ -39,7 +42,7 @@ export function OverallChart({ overall }: OverallChartProps) {
       {/* Header */}
       <View className="items-center pb-2">
         <Text className="text-lg font-semibold">Overall Band Score</Text>
-        <Text className="text-muted-foreground">Session ID: 123</Text>
+        <Text className="text-muted-foreground">Session ID: {sessionId}</Text>
       </View>
 
       {/* Chart */}
@@ -71,7 +74,7 @@ export function OverallChart({ overall }: OverallChartProps) {
             y={center}
             textAnchor="middle"
             fontSize="32"
-            fontWeight="bold"
+            fontFamily="Geist-Bold"
             fill="#111827"
           >
             {overall.toFixed(1)}
@@ -79,6 +82,7 @@ export function OverallChart({ overall }: OverallChartProps) {
           <SvgText
             x={center}
             y={center + 20}
+            fontFamily="Geist-Medium"
             textAnchor="middle"
             fontSize="14"
             fill="#6B7280"

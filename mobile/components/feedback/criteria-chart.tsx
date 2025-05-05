@@ -121,6 +121,7 @@ export function CriteriaChart({
                   fontSize="12"
                   fill="#6B7280"
                   textAnchor="middle"
+                  fontFamily="Geist"
                 >
                   {point.criteria}
                 </SvgText>
@@ -131,7 +132,7 @@ export function CriteriaChart({
                   fontSize="13"
                   fill="#364153"
                   textAnchor="middle"
-                  fontWeight="bold"
+                  fontFamily="Geist-Bold"
                 >
                   {point.score.toFixed(1)}
                 </SvgText>
