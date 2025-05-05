@@ -78,6 +78,7 @@ export default function RootLayout() {
     "Geist-Bold": require("../assets/fonts/Geist-Bold.ttf"),
     "Geist-Medium": require("../assets/fonts/Geist-Medium.ttf"),
     "Geist-SemiBold": require("../assets/fonts/Geist-SemiBold.ttf"),
+    "Geist-ExtraBold": require("../assets/fonts/Geist-ExtraBold.ttf"),
   });
   const { colorScheme, setColorScheme, isDarkColorScheme } = useColorScheme();
   const [isColorSchemeLoaded, setIsColorSchemeLoaded] = React.useState(false);
@@ -124,6 +125,7 @@ export default function RootLayout() {
   if (!isColorSchemeLoaded || !fontsLoaded) {
     return null;
   }
+  console.log({ fontsLoaded, error });
 
   return (
     <>

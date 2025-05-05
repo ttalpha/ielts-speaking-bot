@@ -40,6 +40,11 @@ function ScreenContent() {
             <Plus className="text-background self-center" />
           </View>
         </Button>
+        <Button onPress={onNext} className="rounded-full" size="icon">
+          <View className="bg-primary justify-center rounded-full h-[45px] w-[45px]">
+            <Plus className="text-background self-center" />
+          </View>
+        </Button>
       </View>
     </View>
   );
